@@ -102,6 +102,12 @@
     
     
     <dependency>
+		<groupId>com.jolbox</groupId>
+		<artifactId>bonecp</artifactId>
+		<version>0.8.0.RELEASE</version>
+	</dependency>
+    
+    <dependency>
 		<groupId>org.slf4j</groupId>
 		<artifactId>slf4j-api</artifactId>
 		<version>1.7.12</version>
