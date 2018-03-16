@@ -90,11 +90,11 @@ public class ItemsController {
 	
 	// 商品修改提交
 	@RequestMapping("editItemsSubmit")
-	public String editItemsSubmit(HttpServletRequest request) throws Exception{
-		// 调用service更新商品信息，页面需要将商品信息传到此防范
-		
-		// 返回ModelAndView
-		ModelAndView modelAndView = new ModelAndView();
+	public String editItemsSubmit(HttpServletRequest request,Integer id,ItemsCustom itemsCustom) throws Exception{
+		// 调用service更新商品信息，页面需要将商品信息传到此方法
+		ItemsService.updateItems(id, itemsCustom);
+//		// 返回ModelAndView
+//		ModelAndView modelAndView = new ModelAndView();
 		// 重定向到商品查询列表
 //		return "redirect:queryItems.action";
 		// 转发
