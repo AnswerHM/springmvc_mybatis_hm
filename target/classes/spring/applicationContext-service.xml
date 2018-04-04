@@ -15,6 +15,6 @@
 		http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd">
 		
 		<!-- 商品管理的service -->		
-		<bean id="itemsService" class="com.humin.ssm.service.impl.ItemsServiceImp"/>
+		<!-- <bean id="itemsService" class="com.humin.ssm.service.impl.ItemsServiceImp"/> -->
 		
 </beans>		

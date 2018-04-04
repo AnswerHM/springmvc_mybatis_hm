@@ -16,7 +16,7 @@
 	<!-- parameterType 传入包装对象（包装了查询条件）
 		parameterType建议使用扩展对象
 	 -->
-	<select id="findItemsList" parameterType="com.humin.ssm.po.ItemsQueryVo " resultType="com.humin.ssm.po.ItemsCustom">
+	<select id="findItemsList" parameterType="com.humin.ssm.po.ItemsQueryVo" resultType="com.humin.ssm.po.ItemsCustom">
 		select * from items 
 		<where>
 			 <include refid="query_itesm_where"></include>

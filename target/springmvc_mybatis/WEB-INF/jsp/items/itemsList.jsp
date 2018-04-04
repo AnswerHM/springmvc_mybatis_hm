@@ -6,18 +6,43 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>springmvc test 查询商品列表</title>
+<script type="text/javascript">
+	function deleteItems(){
+		// 提交form
+		document.itemsForm.action="${pageContext.request.contextPath }/items/deleteItems.action";
+		document.itemsForm.submit();
+	}
+	function queryItems(){
+		// 提交form
+		document.itemsForm.action="${pageContext.request.contextPath }/items/queryItems.action";
+		document.itemsForm.submit();
+	}
+</script>
 </head>
 <body>
-	<form action="${pageContext.request.contextPath }/item/queryItem.action" method="POST"> 
+	<form name="itemsForm" action="${pageContext.request.contextPath }/items/queryItems.action" method="POST"> 
 		查询条件：
 		<table width="100%" border=1>
 			<tr>
-				<td><input type="submit" value="查询"/></td>
+				<td>
+				商品名称：<input name="itemsCustom.name" />
+				商品类型：
+				<select name="itemtype">
+					<c:forEach items="${itemtypes }" var="itemtype">
+						<option value="${itemtype.key }">${itemtype.value }</option>
+					</c:forEach>
+				</select>
+				</td>
+				<td>
+				<input type="button" value="查询" onclick="queryItems();"/>
+				<input type="button" value="批量删除" onclick="deleteItems();"/>
+				</td>
 			</tr>
 		</table>
 		商品列表：
 		<table width="100%" border=1>
 			<tr>
+				<td>选择</td>
 				<td>商品名称</td>
 				<td>商品价格</td>
 				<td>生产日期</td>
@@ -26,11 +51,12 @@
 			</tr>
 			<c:forEach items="${itemsList }" var="item">
 				<tr>
+					<td><input type="checkbox" name="items_id" value="${item.id}"/></td>
 					<td>${item.name }</td>
 					<td>${item.price }</td>
 					<td></td>
 					<td>${item.detail }</td>
-					<td><a href="${pageContext.request.contextPath }/item/queryItem.action?id=${item.id}">修改</a></td>
+					<td><a href="${pageContext.request.contextPath }/items/editItems.action?id=${item.id}">修改</a></td>
 				</tr>
 			</c:forEach>
 		</table>

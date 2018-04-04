@@ -3,6 +3,8 @@
  */
 package com.humin.ssm.mapper;
 
+import com.humin.ssm.po.Items;
+
 /** 
  * @ClassName: ItemsMapper 
  * @Description: 
@@ -10,6 +12,6 @@ package com.humin.ssm.mapper;
  * @date Mar 12, 2018 1:43:19 PM 
  *  
  */
-public class ItemsMapper {
-
+public interface ItemsMapper {
+	public Items selectByPrimaryKey(Integer id);
 }

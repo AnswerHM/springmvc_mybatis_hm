@@ -5,6 +5,11 @@ package com.humin.ssm.po;
 
 import java.util.Date;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import com.humin.ssm.controller.validation.ValidGroup1;
+
 /** 
  * @ClassName: Items 
  * @Description: 
@@ -14,13 +19,17 @@ import java.util.Date;
  */
 public class Items {
 	private Integer id;
-	
+	// 校验名称在1到30字符中间 
+	// message是提示校验出错显示的信息
+	// groups此校验属于哪个分组，groups可以定义多个分组
+	@Size(min=1,max=30,message="{items.name.length.error}",groups={ValidGroup1.class})
 	private String name;
 	
 	private Float price;
 	
 	private String pic;
-	
+	// 非空校验
+	@NotNull(message="{items.createTime.isNull}")
 	private Date createTime;
 	
 	private String detail;

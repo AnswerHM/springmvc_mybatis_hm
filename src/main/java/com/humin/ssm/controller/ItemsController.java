@@ -3,19 +3,32 @@
  */
 package com.humin.ssm.controller;
 
+import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.humin.ssm.controller.validation.ValidGroup1;
 import com.humin.ssm.po.ItemsCustom;
+import com.humin.ssm.po.ItemsQueryVo;
 import com.humin.ssm.service.impl.ItemsServiceImp;
 
 /** 
@@ -33,10 +46,20 @@ public class ItemsController {
 	@Resource
 	ItemsServiceImp ItemsService;
 	
+	// 商品分类
+	// itemTypes表示最终将方法返回值放在request中的key
+	@ModelAttribute("itemtypes")
+	public Map<String,String> getItemTypes(){
+		Map<String,String> itemTypes = new HashMap<String,String>();
+		itemTypes.put("101","数码");
+		itemTypes.put("102","母婴");
+		return itemTypes;
+	}
+	
 	// 商品查询列表
 	@RequestMapping("/queryItems")
-	public ModelAndView queryItems(HttpServletRequest request) throws Exception{
-		List<ItemsCustom> itemsList = ItemsService.findItemsList(null);
+	public ModelAndView queryItems(HttpServletRequest request,ItemsQueryVo itemsQueryVo) throws Exception{
+		List<ItemsCustom> itemsList = ItemsService.findItemsList(itemsQueryVo);
 		// 返回ModelAndView
 		ModelAndView modelAndView = new ModelAndView();
 		// 相当于request的setAttribute 在jsp页面中通过itemsList取数据
@@ -81,6 +104,10 @@ public class ItemsController {
 		
 		// 调用service根据商品id查询商品信息
 		ItemsCustom itemsCustom = ItemsService.findItemsById(items_id);
+		// 判断商品是否为空，根据id没有查询到商品，抛出异常，提示用户商品信息不存在
+//		if(itemsCustom == null){
+//			throw new CustomException("商品信息不存在！");
+//		}
 		//通过形参中的model将model数据传到页面
 		//相当于modelAndView.addObject方法
 		model.addAttribute("itemsCustom",itemsCustom);
@@ -89,8 +116,50 @@ public class ItemsController {
 	}
 	
 	// 商品修改提交
+	// 在需要校验的pojo前边添加@Validated，在需要校验的pojo后边添加BindingResult bindingResult接收校验出错信息
+	// 注意：@Validated和BindingResult bindingResult是配对出现，并且形参顺序是固定的（一前一后）。
+	// value={ValidGroup1.class}指定使用ValidGroup1分组的校验
+	// @ModelAttribute可以指定pojo回显到页面在request中的key
 	@RequestMapping("editItemsSubmit")
-	public String editItemsSubmit(HttpServletRequest request,Integer id,ItemsCustom itemsCustom) throws Exception{
+	public String editItemsSubmit(Model model,HttpServletRequest request,Integer id,
+			@ModelAttribute("items") @Validated(value={ValidGroup1.class}) ItemsCustom itemsCustom,BindingResult bindingResult,
+			MultipartFile items_pic //接收商品图片
+			) throws Exception{
+		
+		// 获取校验错误信息
+		if(bindingResult.hasErrors()){
+			// 输出错误信息
+			List<ObjectError> allErrors = bindingResult.getAllErrors();
+			for(ObjectError objectError:allErrors){
+				// 输出错误信息
+				System.out.println(objectError.getDefaultMessage());
+			}
+			// 将错误信息传到页面
+			model.addAttribute("allErrors",allErrors);
+			
+			// 可以直接使用model将提交pojo回显到页面
+			model.addAttribute("items",itemsCustom);
+			
+			// 出错重新到商品修改页面
+			return "items/editItems";
+		}
+		// 原始名称
+		String originalFilename = items_pic.getOriginalFilename();
+		// 上传图片
+		if(items_pic != null && originalFilename != null && originalFilename.length() > 0){
+			// 存储图片的物理路径
+			String pic_path = "/Users/humin/Documents/develop/upload/temp";
+			// 新的图片名称
+			String newfileName = UUID.randomUUID() + originalFilename.substring(originalFilename.lastIndexOf("."));
+			// 新的图片
+			File newFile = new File(pic_path + newfileName);
+			// 将内存中的数据写入磁盘
+			items_pic.transferTo(newFile);
+			// 将新图片名称写到itemsCustom中
+			itemsCustom.setPic(newfileName);
+		}
+		
+		
 		// 调用service更新商品信息，页面需要将商品信息传到此方法
 		ItemsService.updateItems(id, itemsCustom);
 //		// 返回ModelAndView
@@ -102,5 +171,49 @@ public class ItemsController {
 //		return "success";
 	}
 	
+	// 批量删除 商品信息
+	@RequestMapping("deleteItems")
+	public String deleteItems(Integer[] items_id) throws Exception{
+		
+		
+		return "forward:queryItems.action";
+	}
+	
+	// 批量修改商品页面，将商品信息查询出来，在页面中可以编辑商品信息
+	@RequestMapping("/editItemsQuery")
+	public ModelAndView editItemsQuery(HttpServletRequest request,ItemsQueryVo itemsQueryVo) throws Exception{
+		List<ItemsCustom> itemsList = ItemsService.findItemsList(itemsQueryVo);
+		// 返回ModelAndView
+		ModelAndView modelAndView = new ModelAndView();
+		// 相当于request的setAttribute 在jsp页面中通过itemsList取数据
+		modelAndView.addObject("itemsList",itemsList);
+		
+		// 指定视图
+		// 下面的路径，如果在视图解析器中配置jsp路径的前缀和jsp的后缀，修改为：
+//		modelAndView.setViewName("/WEB-INF/jsp/items/itemsList.jsp");
+		// 上面的路径配置可以不在程序中指定jsp路径的前缀和jsp路径的后缀
+		modelAndView.setViewName("/items/editItemsQuery");
+		
+		return modelAndView;
+	}
+	
+	//批量修改商品提交
+	// 通过ItemsQueryVo接收批量提交的商品信息，将商品信息存储到ItemsQueryVo中itemsList属性中。
+	@RequestMapping("/editItemsAllSubmit")
+	public String editItemsAllSubmit(ItemsQueryVo itemsQueryVo){
+		
+		return "success";
+	}
+	
+	
+	// 查询商品信息，输出json
+	// "/itemsView/{id}"里边的{id}表示将这个位置的参数传到@PathVariable指定名称中。
+	@RequestMapping("/itemsView/{id}")
+	public @ResponseBody ItemsCustom itemsView(@PathVariable("id") Integer id) throws Exception{
+		
+		ItemsCustom itemsCustom = ItemsService.findItemsById(id);
+		
+		return itemsCustom;
+	}
 	
 }
